@@ -235,7 +235,6 @@ _READERS[".rtf"] = _text_from_rtf
 ```
 
 
-
 **Add a new graph node** (e.g. Slack alert) — add a function in `src/agent/graph.py`,
 register it with `g.add_node`, and wire it into the edges. The rest of the graph
 is unaffected.
