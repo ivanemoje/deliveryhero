@@ -1,0 +1,21 @@
+# Local development files
+.local/
+
+# Environment variables
+.env
+
+# Python & cache files
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+.ruff_cache/
+secrets/
+
+# Virtual environment
+.venv/
+
+# VScode settings
+.vscode/
+*.code-workspace
