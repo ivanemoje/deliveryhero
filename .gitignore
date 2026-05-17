@@ -20,3 +20,10 @@ dist/
 # VScode settings
 .vscode/
 *.code-workspace
+
+# MacOS files
+.DS_Store
+
+# Logs
+logs/
+*.log
