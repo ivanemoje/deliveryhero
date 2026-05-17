@@ -25,7 +25,7 @@ build:
 
 up:
 	@cp -n $(ENV_FILE).example $(ENV_FILE) 2>/dev/null || true
-	$(COMPOSE) up -d postgres minio minio-init
+	$(COMPOSE) up -d postgres minio minio-init pgadmin
 	@echo "Waiting for services to be healthy..."
 	@$(COMPOSE) ps
 
