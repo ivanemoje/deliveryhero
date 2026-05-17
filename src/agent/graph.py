@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal, Optional, TypedDict
 
 from langgraph.graph import END, StateGraph
 
@@ -15,12 +15,12 @@ from langgraph.graph import END, StateGraph
 
 class PipelineState(TypedDict):
     file_path: str
-    object_key: str | None
-    metadata: dict | None
-    contract_id: str | None
-    error: str | None
+    object_key: Optional[str]  # noqa: UP007 - LangGraph resolves this on local Python 3.9.
+    metadata: Optional[dict]  # noqa: UP007 - LangGraph resolves this on local Python 3.9.
+    contract_id: Optional[str]  # noqa: UP007 - LangGraph resolves this on local Python 3.9.
+    error: Optional[str]  # noqa: UP007 - LangGraph resolves this on local Python 3.9.
     retries: int
-    status: Literal["running", "ok", "failed", "skipped"]
+    status: Literal["running", "ok", "failed", "skipped", "retry"]
 
 
 # ── Node implementations ───────────────────────────────────────────────────────
@@ -32,18 +32,16 @@ def node_check_duplicate(state: PipelineState) -> PipelineState:
 
     raw_path = state["file_path"]
 
+    # Handle key derivation without mangling URIs with Path()
     if raw_path.startswith("gdoc://"):
         doc_id = raw_path[len("gdoc://") :]
         key = f"contracts/{doc_id}.gdoc"
     else:
         key = f"contracts/{Path(raw_path).name}"
 
-    try:
-        if file_already_processed(key):
-            print(f"[SKIP] already processed: {key}")
-            return {**state, "object_key": key, "status": "skipped"}
-    except Exception:
-        pass
+    if file_already_processed(key):
+        print(f"[SKIP] already processed: {key}")
+        return {**state, "object_key": key, "status": "skipped"}
 
     return {**state, "object_key": key}
 
@@ -83,7 +81,16 @@ def node_extract(state: PipelineState) -> PipelineState:
 def node_validate(state: PipelineState) -> PipelineState:
     """Check for required metadata fields."""
     meta = state.get("metadata") or {}
-    required = ("client_name", "provider_name", "effective_date")
+    required = (
+        "client_name",
+        "provider_name",
+        "effective_date",
+        "expiration_date",
+        "total_contract_value",
+        "currency",
+        "force_majeure_notice_days",
+        "non_renewal_notice_months",
+    )
     missing = [f for f in required if not meta.get(f)]
 
     if not missing:
@@ -95,7 +102,11 @@ def node_validate(state: PipelineState) -> PipelineState:
     if retries < max_retries:
         return {**state, "retries": retries + 1, "status": "retry"}
 
-    return {**state, "status": "failed", "error": f"Validation failed: missing {missing}"}
+    return {
+        **state,
+        "status": "failed",
+        "error": f"Validation failed: missing {missing}",
+    }
 
 
 def node_persist(state: PipelineState) -> PipelineState:
@@ -128,10 +139,28 @@ def node_notify(state: PipelineState) -> PipelineState:
         pass
     else:
         print(f"[PIPELINE OK] contract_id={state.get('contract_id')} file={state['file_path']}")
-        if fm_days is not None and fm_days <= 14:
-            print(f"FM threshold alert: {fm_days} days.")
+        if fm_days is not None and fm_days > 14:
+            message = (
+                "Force Majeure notice period exceeds 14-day termination trigger: "
+                f"{fm_days} days for contract_id={state.get('contract_id')}"
+            )
+            print(f"  [ALERT] {message}")
+            _send_slack_alert(message)
 
     return state
+
+
+def _send_slack_alert(message: str) -> None:
+    webhook_url = os.getenv("SLACK_WEBHOOK_URL")
+    if not webhook_url:
+        return
+
+    try:
+        import httpx
+
+        httpx.post(webhook_url, json={"text": message}, timeout=5.0).raise_for_status()
+    except Exception as e:
+        print(f"[WARN] Slack alert failed: {e}")
 
 
 # ── Routing & Assembly ─────────────────────────────────────────────────────────
@@ -150,9 +179,13 @@ def build_graph():
     g.set_entry_point("check_duplicate")
 
     g.add_conditional_edges(
-        "check_duplicate", lambda s: "notify" if s["status"] == "skipped" else "ingest"
+        "check_duplicate",
+        lambda s: "notify" if s["status"] == "skipped" else "ingest",
     )
-    g.add_conditional_edges("ingest", lambda s: "notify" if s["status"] == "failed" else "extract")
+    g.add_conditional_edges(
+        "ingest",
+        lambda s: "notify" if s["status"] == "failed" else "extract",
+    )
     g.add_edge("extract", "validate")
     g.add_conditional_edges(
         "validate",

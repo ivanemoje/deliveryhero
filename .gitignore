@@ -3,6 +3,7 @@
 
 # Environment variables
 .env
+6878e636e89d.json
 
 # Python & cache files
 __pycache__/
@@ -11,7 +12,7 @@ __pycache__/
 *.egg-info/
 dist/
 .ruff_cache/
-secrets/
+# secrets/
 
 # Virtual environment
 .venv/

@@ -2,13 +2,12 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: postgres_deliveryhero
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - 127.0.0.1:5432:5432
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -20,30 +19,30 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: pgadmin_deliveryhero
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
-      - 127.0.0.1:5050:80
+      - "${PGADMIN_HOST_PORT:-5050}:80"
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
 
   minio:
     image: minio/minio:latest
-    container_name: minio_deliveryhero
-    command: server /data --console-address :9001
+    command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     ports:
-      - 127.0.0.1:9000:9000
-      - 127.0.0.1:9001:9001
+      - "${MINIO_HOST_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_HOST_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -54,9 +53,10 @@ services:
       minio:
         condition: service_healthy
     entrypoint: >
-      /bin/sh -c 
-      "mc alias set local http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY} &&
-      mc mb --ignore-existing local/$${MINIO_BUCKET}"
+      /bin/sh -c "
+        mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY} &&
+        mc mb --ignore-existing local/${MINIO_BUCKET}
+      "
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
@@ -64,7 +64,6 @@ services:
 
   pipeline:
     build: .
-    container_name: pipeline_deliveryhero
     depends_on:
       postgres:
         condition: service_healthy
@@ -75,8 +74,10 @@ services:
     env_file: .env
     volumes:
       - ./sample_contracts:/app/input:ro
+      - ./secrets:/app/secrets:ro
     command: ["python", "-m", "src.agent.pipeline", "--input-dir", "/app/input"]
 
 volumes:
   postgres_data:
+  pgadmin_data:
   minio_data:

@@ -20,7 +20,7 @@ def _client():
         aws_access_key_id=os.environ["MINIO_ACCESS_KEY"],
         aws_secret_access_key=os.environ["MINIO_SECRET_KEY"],
         config=Config(signature_version="s3v4"),
-        region_name="eu-west-1",  # MinIO ignores region but boto3 requires one
+        region_name="us-east-1",  # MinIO ignores region but boto3 requires one
     )
 
 

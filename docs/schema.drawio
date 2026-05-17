@@ -1,0 +1,452 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="contract-schema" name="Contract Schema">
+    <mxGraphModel dx="2346" dy="1084" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=28;fontStyle=1;" value="Legal Contract Data Model" vertex="1">
+          <mxGeometry height="50" width="700" x="60" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="schema_notes" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fontSize=12;fillColor=#fff2cc;strokeColor=#d6b656;" value="Enums: contract_status_t(ACTIVE, EXPIRED, TERMINATED, DRAFT, SUPERSEDED), party_role_t(CLIENT, SERVICE_PROVIDER)&#xa;Trigger: INSTEAD OF DELETE ON contracts view&#xa;Indexes: idx_parties_country, idx_versions_status, idx_versions_expiration_active, idx_versions_master, idx_versions_jurisdictions_gin, idx_versions_clauses_gin, idx_clauses_contract_type, idx_clause_metadata_gin, idx_renewal_notice_deadline, idx_payment_contract, idx_regulatory_contract, idx_regulatory_dataset_id" vertex="1">
+          <mxGeometry height="110" width="900" x="890" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="parties" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" value="parties" vertex="1">
+          <mxGeometry height="268" width="360" x="60" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="parties_r1" parent="parties" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK party_id : UUID DEFAULT gen_random_uuid()" vertex="1">
+          <mxGeometry height="26" width="360" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="parties_r2" parent="parties" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="legal_name : TEXT NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="parties_r3" parent="parties" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="street : TEXT" vertex="1">
+          <mxGeometry height="26" width="360" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="parties_r4" parent="parties" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="city : TEXT" vertex="1">
+          <mxGeometry height="26" width="360" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="parties_r5" parent="parties" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="region : TEXT" vertex="1">
+          <mxGeometry height="26" width="360" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="parties_r6" parent="parties" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="country : TEXT NOT NULL DEFAULT &#39;UNKNOWN&#39;" vertex="1">
+          <mxGeometry height="26" width="360" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="parties_r7" parent="parties" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="created_at : TIMESTAMPTZ NOT NULL DEFAULT NOW()" vertex="1">
+          <mxGeometry height="26" width="360" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="parties_r8" parent="parties" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="updated_at : TIMESTAMPTZ NOT NULL DEFAULT NOW()" vertex="1">
+          <mxGeometry height="26" width="360" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="parties_r9" parent="parties" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=2;fontSize=12;" value="UQ (legal_name, country)" vertex="1">
+          <mxGeometry height="26" width="360" y="242" as="geometry" />
+        </mxCell>
+        <mxCell id="source_documents" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" value="source_documents" vertex="1">
+          <mxGeometry height="190" width="410" x="60" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="source_documents_r1" parent="source_documents" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK source_document_id : UUID DEFAULT gen_random_uuid()" vertex="1">
+          <mxGeometry height="26" width="410" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="source_documents_r2" parent="source_documents" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="source_file_key : TEXT NOT NULL UNIQUE" vertex="1">
+          <mxGeometry height="26" width="410" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="source_documents_r3" parent="source_documents" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="source_name : TEXT NOT NULL" vertex="1">
+          <mxGeometry height="26" width="410" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="source_documents_r4" parent="source_documents" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="file_format : TEXT NOT NULL" vertex="1">
+          <mxGeometry height="26" width="410" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="source_documents_r5" parent="source_documents" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="content_sha256 : TEXT" vertex="1">
+          <mxGeometry height="26" width="410" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="source_documents_r6" parent="source_documents" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="ingested_at : TIMESTAMPTZ NOT NULL DEFAULT NOW()" vertex="1">
+          <mxGeometry height="26" width="410" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_masters" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;" value="contract_masters" vertex="1">
+          <mxGeometry height="190" width="440" x="560" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_masters_r1" parent="contract_masters" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK master_contract_id : UUID DEFAULT gen_random_uuid()" vertex="1">
+          <mxGeometry height="26" width="440" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_masters_r2" parent="contract_masters" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK client_party_id : UUID NOT NULL -&gt; parties.party_id" vertex="1">
+          <mxGeometry height="26" width="440" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_masters_r3" parent="contract_masters" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK provider_party_id : UUID NOT NULL -&gt; parties.party_id" vertex="1">
+          <mxGeometry height="26" width="440" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_masters_r4" parent="contract_masters" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="created_at : TIMESTAMPTZ NOT NULL DEFAULT NOW()" vertex="1">
+          <mxGeometry height="26" width="440" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_masters_r5" parent="contract_masters" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="updated_at : TIMESTAMPTZ NOT NULL DEFAULT NOW()" vertex="1">
+          <mxGeometry height="26" width="440" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_masters_r6" parent="contract_masters" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=2;fontSize=12;" value="UQ (client_party_id, provider_party_id)" vertex="1">
+          <mxGeometry height="26" width="440" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;" value="contract_versions" vertex="1">
+          <mxGeometry height="476" width="520" x="1160" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r1" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK contract_version_id : UUID DEFAULT gen_random_uuid()" vertex="1">
+          <mxGeometry height="26" width="520" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r2" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK master_contract_id : UUID NOT NULL -&gt; contract_masters" vertex="1">
+          <mxGeometry height="26" width="520" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r3" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK source_document_id : UUID -&gt; source_documents" vertex="1">
+          <mxGeometry height="26" width="520" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r4" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK predecessor_version_id : UUID -&gt; contract_versions" vertex="1">
+          <mxGeometry height="26" width="520" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r5" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="version_number : INT NOT NULL DEFAULT 1 CHECK &gt; 0" vertex="1">
+          <mxGeometry height="26" width="520" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r6" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="status : contract_status_t NOT NULL DEFAULT &#39;ACTIVE&#39;" vertex="1">
+          <mxGeometry height="26" width="520" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r7" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="effective_date : DATE" vertex="1">
+          <mxGeometry height="26" width="520" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r8" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="expiration_date : DATE" vertex="1">
+          <mxGeometry height="26" width="520" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r9" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="total_contract_value : NUMERIC(18,2)" vertex="1">
+          <mxGeometry height="26" width="520" y="242" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r10" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="currency : CHAR(3) CHECK ^[A-Z]{3}$" vertex="1">
+          <mxGeometry height="26" width="520" y="268" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r11" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="governing_law : TEXT" vertex="1">
+          <mxGeometry height="26" width="520" y="294" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r12" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="venue : TEXT" vertex="1">
+          <mxGeometry height="26" width="520" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r13" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="jurisdiction_tags : TEXT[] NOT NULL DEFAULT &#39;{}&#39;" vertex="1">
+          <mxGeometry height="26" width="520" y="346" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r14" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="clauses_snapshot : JSONB NOT NULL DEFAULT &#39;[]&#39;" vertex="1">
+          <mxGeometry height="26" width="520" y="372" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r15" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="extracted_at : TIMESTAMPTZ NOT NULL DEFAULT NOW()" vertex="1">
+          <mxGeometry height="26" width="520" y="398" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r16" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="superseded_at : TIMESTAMPTZ" vertex="1">
+          <mxGeometry height="26" width="520" y="424" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_versions_r17" parent="contract_versions" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=2;fontSize=12;" value="UQ (master_contract_id, version_number)" vertex="1">
+          <mxGeometry height="26" width="520" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;" value="contracts VIEW" vertex="1">
+          <mxGeometry height="502" width="420" x="1840" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r1" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=2;fontSize=12;" value="Compatibility view over versioned tables" vertex="1">
+          <mxGeometry height="26" width="420" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r2" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="contract_id" vertex="1">
+          <mxGeometry height="26" width="420" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r3" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="source_document_id" vertex="1">
+          <mxGeometry height="26" width="420" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r4" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="parent_contract_id" vertex="1">
+          <mxGeometry height="26" width="420" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r5" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="client_party_id" vertex="1">
+          <mxGeometry height="26" width="420" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r6" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="provider_party_id" vertex="1">
+          <mxGeometry height="26" width="420" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r7" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="status" vertex="1">
+          <mxGeometry height="26" width="420" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r8" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="effective_date" vertex="1">
+          <mxGeometry height="26" width="420" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r9" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="expiration_date" vertex="1">
+          <mxGeometry height="26" width="420" y="242" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r10" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="total_contract_value" vertex="1">
+          <mxGeometry height="26" width="420" y="268" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r11" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="currency" vertex="1">
+          <mxGeometry height="26" width="420" y="294" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r12" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="governing_law" vertex="1">
+          <mxGeometry height="26" width="420" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r13" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="venue" vertex="1">
+          <mxGeometry height="26" width="420" y="346" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r14" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="jurisdiction_tags" vertex="1">
+          <mxGeometry height="26" width="420" y="372" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r15" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="clauses_snapshot" vertex="1">
+          <mxGeometry height="26" width="420" y="398" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r16" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="source_file_key" vertex="1">
+          <mxGeometry height="26" width="420" y="424" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r17" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="version_number" vertex="1">
+          <mxGeometry height="26" width="420" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts_view_r18" parent="contracts_view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="extracted_at" vertex="1">
+          <mxGeometry height="26" width="420" y="476" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_party_roles" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" value="contract_party_roles" vertex="1">
+          <mxGeometry height="138" width="440" x="560" y="1110" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_party_roles_r1" parent="contract_party_roles" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK/FK contract_version_id : UUID NOT NULL -&gt; contract_versions" vertex="1">
+          <mxGeometry height="26" width="440" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_party_roles_r2" parent="contract_party_roles" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK/FK party_id : UUID NOT NULL -&gt; parties" vertex="1">
+          <mxGeometry height="26" width="440" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_party_roles_r3" parent="contract_party_roles" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK role : party_role_t NOT NULL" vertex="1">
+          <mxGeometry height="26" width="440" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_party_roles_r4" parent="contract_party_roles" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=2;fontSize=12;" value="roles: CLIENT, SERVICE_PROVIDER" vertex="1">
+          <mxGeometry height="26" width="440" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="extraction_audit" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" value="extraction_audit" vertex="1">
+          <mxGeometry height="242" width="440" x="560" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="extraction_audit_r1" parent="extraction_audit" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK audit_id : UUID DEFAULT gen_random_uuid()" vertex="1">
+          <mxGeometry height="26" width="440" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="extraction_audit_r2" parent="extraction_audit" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK contract_version_id : UUID -&gt; contract_versions" vertex="1">
+          <mxGeometry height="26" width="440" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="extraction_audit_r3" parent="extraction_audit" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK source_document_id : UUID -&gt; source_documents" vertex="1">
+          <mxGeometry height="26" width="440" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="extraction_audit_r4" parent="extraction_audit" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="field_name : TEXT NOT NULL" vertex="1">
+          <mxGeometry height="26" width="440" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="extraction_audit_r5" parent="extraction_audit" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="extracted_value : TEXT" vertex="1">
+          <mxGeometry height="26" width="440" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="extraction_audit_r6" parent="extraction_audit" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="confidence_score : NUMERIC(5,4) CHECK 0..1" vertex="1">
+          <mxGeometry height="26" width="440" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="extraction_audit_r7" parent="extraction_audit" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="extraction_method : TEXT NOT NULL DEFAULT &#39;regex&#39;" vertex="1">
+          <mxGeometry height="26" width="440" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="extraction_audit_r8" parent="extraction_audit" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="created_at : TIMESTAMPTZ NOT NULL DEFAULT NOW()" vertex="1">
+          <mxGeometry height="26" width="440" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" value="renewal_terms" vertex="1">
+          <mxGeometry height="268" width="520" x="520" y="1340" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms_r1" parent="renewal_terms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK renewal_term_id : UUID DEFAULT gen_random_uuid()" vertex="1">
+          <mxGeometry height="26" width="520" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms_r2" parent="renewal_terms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK contract_version_id : UUID NOT NULL -&gt; contract_versions" vertex="1">
+          <mxGeometry height="26" width="520" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms_r3" parent="renewal_terms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="auto_renews : BOOLEAN NOT NULL DEFAULT FALSE" vertex="1">
+          <mxGeometry height="26" width="520" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms_r4" parent="renewal_terms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="renewal_period_months : INT CHECK &gt; 0" vertex="1">
+          <mxGeometry height="26" width="520" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms_r5" parent="renewal_terms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="non_renewal_notice_days : INT CHECK &gt;= 0" vertex="1">
+          <mxGeometry height="26" width="520" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms_r6" parent="renewal_terms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="notice_deadline_date : DATE" vertex="1">
+          <mxGeometry height="26" width="520" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms_r7" parent="renewal_terms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="renewal_sequence : INT NOT NULL DEFAULT 1 CHECK &gt; 0" vertex="1">
+          <mxGeometry height="26" width="520" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms_r8" parent="renewal_terms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="metadata : JSONB NOT NULL DEFAULT &#39;{}&#39;" vertex="1">
+          <mxGeometry height="26" width="520" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="renewal_terms_r9" parent="renewal_terms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=2;fontSize=12;" value="UQ (contract_version_id, renewal_sequence)" vertex="1">
+          <mxGeometry height="26" width="520" y="242" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_schedule" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" value="payment_schedule" vertex="1">
+          <mxGeometry height="216" width="420" x="1840" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_schedule_r1" parent="payment_schedule" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK payment_id : UUID DEFAULT gen_random_uuid()" vertex="1">
+          <mxGeometry height="26" width="420" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_schedule_r2" parent="payment_schedule" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK contract_version_id : UUID NOT NULL -&gt; contract_versions" vertex="1">
+          <mxGeometry height="26" width="420" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_schedule_r3" parent="payment_schedule" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="amount : NUMERIC(18,2) NOT NULL" vertex="1">
+          <mxGeometry height="26" width="420" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_schedule_r4" parent="payment_schedule" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="currency : CHAR(3) NOT NULL CHECK ^[A-Z]{3}$" vertex="1">
+          <mxGeometry height="26" width="420" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_schedule_r5" parent="payment_schedule" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="due_date : DATE" vertex="1">
+          <mxGeometry height="26" width="420" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_schedule_r6" parent="payment_schedule" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="cadence : TEXT" vertex="1">
+          <mxGeometry height="26" width="420" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="payment_schedule_r7" parent="payment_schedule" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="description : TEXT" vertex="1">
+          <mxGeometry height="26" width="420" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" value="contract_clauses" vertex="1">
+          <mxGeometry height="346" width="480" x="1840" y="1190" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r1" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK clause_id : UUID DEFAULT gen_random_uuid()" vertex="1">
+          <mxGeometry height="26" width="480" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r2" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK contract_version_id : UUID NOT NULL -&gt; contract_versions" vertex="1">
+          <mxGeometry height="26" width="480" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r3" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="clause_type : TEXT NOT NULL" vertex="1">
+          <mxGeometry height="26" width="480" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r4" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="clause_text : TEXT" vertex="1">
+          <mxGeometry height="26" width="480" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r5" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="notice_period_days : INT CHECK &gt;= 0" vertex="1">
+          <mxGeometry height="26" width="480" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r6" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="notice_period_months : INT CHECK &gt;= 0" vertex="1">
+          <mxGeometry height="26" width="480" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r7" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="performance_delay_threshold_days : INT CHECK &gt;= 0" vertex="1">
+          <mxGeometry height="26" width="480" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r8" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="immediate_termination_allowed : BOOLEAN" vertex="1">
+          <mxGeometry height="26" width="480" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r9" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="confidence_score : NUMERIC(5,4) CHECK 0..1" vertex="1">
+          <mxGeometry height="26" width="480" y="242" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r10" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="extraction_method : TEXT NOT NULL DEFAULT &#39;regex&#39;" vertex="1">
+          <mxGeometry height="26" width="480" y="268" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r11" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="metadata : JSONB NOT NULL DEFAULT &#39;{}&#39;" vertex="1">
+          <mxGeometry height="26" width="480" y="294" as="geometry" />
+        </mxCell>
+        <mxCell id="contract_clauses_r12" parent="contract_clauses" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="extracted_at : TIMESTAMPTZ NOT NULL DEFAULT NOW()" vertex="1">
+          <mxGeometry height="26" width="480" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=34;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" value="regulatory_datasets" vertex="1">
+          <mxGeometry height="294" width="520" x="60" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r1" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=1;fontSize=12;" value="PK regulatory_dataset_id : UUID DEFAULT gen_random_uuid()" vertex="1">
+          <mxGeometry height="26" width="520" y="34" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r2" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="FK contract_version_id : UUID NOT NULL -&gt; contract_versions" vertex="1">
+          <mxGeometry height="26" width="520" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r3" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="dataset_id : TEXT NOT NULL" vertex="1">
+          <mxGeometry height="26" width="520" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r4" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="title : TEXT NOT NULL" vertex="1">
+          <mxGeometry height="26" width="520" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r5" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="description : TEXT" vertex="1">
+          <mxGeometry height="26" width="520" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r6" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="query : TEXT NOT NULL" vertex="1">
+          <mxGeometry height="26" width="520" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r7" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="published_after : DATE NOT NULL" vertex="1">
+          <mxGeometry height="26" width="520" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r8" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="retrieved_at : TIMESTAMPTZ NOT NULL DEFAULT NOW()" vertex="1">
+          <mxGeometry height="26" width="520" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r9" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontSize=12;" value="metadata : JSONB NOT NULL DEFAULT &#39;{}&#39;" vertex="1">
+          <mxGeometry height="26" width="520" y="242" as="geometry" />
+        </mxCell>
+        <mxCell id="regulatory_datasets_r10" parent="regulatory_datasets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=8;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;fontStyle=2;fontSize=12;" value="UQ (contract_version_id, dataset_id)" vertex="1">
+          <mxGeometry height="26" width="520" y="268" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_master_client" edge="1" parent="1" source="contract_masters" style="endArrow=ERone;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="parties" value="client_party_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_master_provider" edge="1" parent="1" source="contract_masters" style="endArrow=ERone;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="parties" value="provider_party_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_version_master" edge="1" parent="1" source="contract_versions" style="endArrow=ERone;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="contract_masters" value="master_contract_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="530" />
+              <mxPoint x="1080" y="451" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_version_source" edge="1" parent="1" source="contract_versions" style="endArrow=ERzeroToOne;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="source_documents" value="source_document_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="390" y="640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_version_self" edge="1" parent="1" source="contract_versions" style="endArrow=ERzeroToOne;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=12;" target="contract_versions" value="predecessor_version_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1420" y="250" />
+              <mxPoint x="1710" y="250" />
+              <mxPoint x="1710" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_view_version" edge="1" parent="1" source="contracts_view" style="endArrow=open;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=12;" target="contract_versions" value="view over">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_roles_version" edge="1" parent="1" source="contract_party_roles" style="endArrow=ERone;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="contract_versions" value="contract_version_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1360" y="1205" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_roles_party" edge="1" parent="1" source="contract_party_roles" style="endArrow=ERone;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="parties" value="party_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="30" y="1205" />
+              <mxPoint x="30" y="457" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_audit_version" edge="1" parent="1" source="extraction_audit" style="endArrow=ERzeroToOne;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="contract_versions" value="contract_version_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="867" />
+              <mxPoint x="1080" y="670" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_audit_source" edge="1" parent="1" source="extraction_audit" style="endArrow=ERzeroToOne;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="source_documents" value="source_document_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_renewal_version" edge="1" parent="1" source="renewal_terms" style="endArrow=ERone;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="contract_versions" value="contract_version_id">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_payment_version" edge="1" parent="1" source="payment_schedule" style="endArrow=ERone;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="contract_versions" value="contract_version_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1760" y="944" />
+              <mxPoint x="1760" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_clauses_version" edge="1" parent="1" source="contract_clauses" style="endArrow=ERone;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="contract_versions" value="contract_version_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1520" y="1402" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_regulatory_version" edge="1" parent="1" source="regulatory_datasets" style="endArrow=ERone;startArrow=ERzeroToMany;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=12;" target="contract_versions" value="contract_version_id">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1080" y="1187" />
+              <mxPoint x="1080" y="670" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

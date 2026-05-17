@@ -1,16 +1,17 @@
 # Extraction
 python-docx==1.1.2
 pdfplumber==0.11.4
+pytesseract==0.3.13
 
 # Agentic framework
 langgraph==0.2.55
 langchain-core==0.3.28
 
 # Storage
-boto3==1.35.99
+boto3==1.35.99          # MinIO S3-compatible client
 
 # Database
-psycopg2-binary==2.9.10
+psycopg[binary]==3.2.3
 sqlalchemy==2.0.36
 
 # API
@@ -23,7 +24,7 @@ python-dotenv==1.0.1
 # Testing
 pytest==8.3.4
 pytest-docker==3.1.1
-moto[s3]==5.0.23
+moto[s3]==5.0.23         # Mock S3/MinIO for unit tests
 
 # Google Docs (optional — only needed for gdoc:// sources)
 google-api-python-client==2.155.0

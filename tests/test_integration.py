@@ -15,6 +15,7 @@ import pytest
 pytestmark = pytest.mark.integration
 
 DUMMY1 = Path("sample_contracts/Dummy_1_PROFESSIONAL_SERVICE_AGREEMENT.docx")
+DUMMY1_KEY = f"contracts/{DUMMY1.name}"
 
 
 def _services_available() -> bool:
@@ -43,6 +44,30 @@ def require_services():
         pytest.skip("Docker services not running — skipping integration tests")
 
 
+def _reset_contract_tables() -> None:
+    from sqlalchemy import text
+
+    from src.db.repository import _engine
+
+    with _engine().begin() as conn:
+        conn.execute(
+            text("""
+                TRUNCATE
+                    regulatory_datasets,
+                    extraction_audit,
+                    contract_clauses,
+                    payment_schedule,
+                    renewal_terms,
+                    contract_party_roles,
+                    contract_versions,
+                    contract_masters,
+                    source_documents,
+                    parties
+                CASCADE
+            """)
+        )
+
+
 @pytest.mark.skipif(not DUMMY1.exists(), reason="sample contract not present")
 def test_full_pipeline_dummy1():
     """
@@ -61,14 +86,7 @@ def test_full_pipeline_dummy1():
     from src.db.repository import _engine
     from src.storage import object_exists
 
-    # Clean up any record from a prior run so this test owns the full cycle
-    file_key = f"contracts/{DUMMY1.name}"
-    with _engine().begin() as conn:
-        conn.execute(
-            text("DELETE FROM contracts WHERE source_file_key = :key"),
-            {"key": file_key},
-        )
-
+    _reset_contract_tables()
     state = pipeline_graph.invoke(
         {
             "file_path": str(DUMMY1),
@@ -85,7 +103,7 @@ def test_full_pipeline_dummy1():
     assert state["contract_id"] is not None
 
     # Verify MinIO
-    assert object_exists(f"contracts/{DUMMY1.name}")
+    assert object_exists(DUMMY1_KEY)
 
     # Verify PostgreSQL
     with _engine().connect() as conn:
@@ -96,7 +114,7 @@ def test_full_pipeline_dummy1():
 
     assert row is not None
     assert float(row[0]) == 150_000.0
-    assert row[1] == "EUR"
+    assert row[1] == "USD"
 
 
 def test_pipeline_invalid_file(tmp_path):
@@ -126,22 +144,13 @@ def test_pipeline_skips_duplicate(tmp_path):
     """
     Running the pipeline twice on the same file should skip on the second run.
     """
-    from sqlalchemy import text
-
     from src.agent.graph import pipeline_graph
-    from src.db.repository import _engine
 
     if not DUMMY1.exists():
         pytest.skip("sample contract not present")
 
-    file_key = f"contracts/{DUMMY1.name}"
-
-    # Remove any record left by a prior test
-    with _engine().begin() as conn:
-        conn.execute(
-            text("DELETE FROM contracts WHERE source_file_key = :key"),
-            {"key": file_key},
-        )
+    # Remove any record left by a prior test so we own the full first→second cycle
+    _reset_contract_tables()
 
     def _run():
         return pipeline_graph.invoke(
@@ -161,4 +170,5 @@ def test_pipeline_skips_duplicate(tmp_path):
 
     second = _run()
     assert second["status"] == "skipped"
+    # Should not create a second DB row
     assert second.get("contract_id") is None

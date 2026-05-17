@@ -12,6 +12,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+# Add these specific imports for the gdoc handler
+from google.auth import default as google_auth_default
+from google.auth.exceptions import DefaultCredentialsError
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
@@ -41,7 +44,14 @@ class ContractMetadata:
 def _text_from_docx(path: Path) -> str:
     from docx import Document
 
-    return "\n".join(p.text for p in Document(str(path)).paragraphs if p.text.strip())
+    doc = Document(str(path))
+    parts = [p.text for p in doc.paragraphs if p.text.strip()]
+    for table in doc.tables:
+        for row in table.rows:
+            cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+            if cells:
+                parts.append(" | ".join(cells))
+    return "\n".join(parts)
 
 
 def _text_from_pdf(path: Path) -> str:
@@ -74,48 +84,87 @@ def _fix_ocr_noise(text: str) -> str:
 
 
 def _text_from_gdoc(doc_id: str) -> str:
-    """Export a Google Doc or Drive-hosted .docx as plain text via the Drive API."""
-    sa_path = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-    scopes = ["https://www.googleapis.com/auth/drive.readonly"]
+    """Read a Google Drive file as text.
 
+    Native Google Docs are exported as text. Uploaded .docx/PDF files are
+    downloaded and parsed with the same local readers used for filesystem input.
+    """
     try:
-        creds = service_account.Credentials.from_service_account_file(sa_path, scopes=scopes)
-    except Exception as e:
-        raise OSError(f"Google Auth failed: {e}") from e
+        sa_path = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+        scopes = ["https://www.googleapis.com/auth/drive.readonly"]
 
-    service = build("drive", "v3", credentials=creds)
+        if sa_path and os.path.exists(sa_path):
+            creds = service_account.Credentials.from_service_account_file(sa_path, scopes=scopes)
+        else:
+            # This is where DefaultCredentialsError is usually raised
+            creds, _ = google_auth_default(scopes=scopes)
 
-    try:
-        file_metadata = service.files().get(fileId=doc_id, fields="name, mimeType").execute()
-        mime_type = file_metadata.get("mimeType")
-    except Exception as e:
-        raise OSError(f"Drive metadata fetch failed: {e}") from e
+        service = build("drive", "v3", credentials=creds)
+        file_meta = (
+            service.files()
+            .get(fileId=doc_id, fields="id,name,mimeType", supportsAllDrives=True)
+            .execute()
+        )
+        mime_type = file_meta.get("mimeType", "")
+        name = file_meta.get("name", doc_id)
 
-    file_stream = io.BytesIO()
+        if mime_type == "application/vnd.google-apps.folder":
+            raise ValueError(
+                f"Google Drive ID {doc_id} is a folder. Pass a file ID or use the pipeline CLI "
+                "folder expansion."
+            )
 
-    try:
         if mime_type == "application/vnd.google-apps.document":
             request = service.files().export_media(fileId=doc_id, mimeType="text/plain")
-        else:
-            # .docx or plain text uploaded to Drive
-            request = service.files().get_media(fileId=doc_id)
+            return _download_drive_media(request).decode("utf-8", errors="replace")
 
-        downloader = MediaIoBaseDownload(file_stream, request)
-        done = False
-        while not done:
-            _, done = downloader.next_chunk()
-    except Exception as e:
-        raise OSError(f"Drive download failed: {e}") from e
+        raw_bytes = _download_drive_media(
+            service.files().get_media(fileId=doc_id, supportsAllDrives=True)
+        )
+        return _text_from_drive_bytes(raw_bytes, name=name, mime_type=mime_type)
 
-    file_stream.seek(0)
+    except (DefaultCredentialsError, Exception) as e:
+        raise OSError(f"Google Drive extraction failed: {e}") from e
 
+
+def _download_drive_media(request) -> bytes:
+    buf = io.BytesIO()
+    downloader = MediaIoBaseDownload(buf, request)
+    done = False
+    while not done:
+        _, done = downloader.next_chunk()
+    return buf.getvalue()
+
+
+def _text_from_drive_bytes(raw_bytes: bytes, *, name: str, mime_type: str) -> str:
+    suffix = Path(name).suffix.lower()
     if mime_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        suffix = ".docx"
+    elif mime_type == "application/pdf":
+        suffix = ".pdf"
+
+    if suffix == ".docx":
         from docx import Document
 
-        doc = Document(file_stream)
-        return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
+        doc = Document(io.BytesIO(raw_bytes))
+        parts = [p.text for p in doc.paragraphs if p.text.strip()]
+        for table in doc.tables:
+            for row in table.rows:
+                cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                if cells:
+                    parts.append(" | ".join(cells))
+        return "\n".join(parts)
 
-    return file_stream.read().decode("utf-8", errors="replace")
+    if suffix == ".pdf":
+        import pdfplumber
+
+        pages = []
+        with pdfplumber.open(io.BytesIO(raw_bytes)) as pdf:
+            for page in pdf.pages:
+                pages.append(page.extract_text() or "")
+        return _fix_ocr_noise("\n".join(pages))
+
+    raise ValueError(f"Unsupported Google Drive file type: {mime_type or suffix or 'unknown'}")
 
 
 _READERS = {".docx": _text_from_docx, ".pdf": _text_from_pdf}
@@ -138,25 +187,29 @@ def _raw_text(raw_input: str) -> tuple[str, str]:
 
 def _parties(text: str) -> dict:
     between = re.search(
-        r"BETWEEN[:\s]*\n+\**([^\*\n,]+)\**.*?located at[^\n]*,\s*([^\n(]+)",
+        r"BETWEEN[:\s]*\n+\**([^\*\n,]+)\**.*?located at\s+(.+?)\s*\(the\s+[\"“]?Client",
         text,
         re.IGNORECASE | re.DOTALL,
     )
     and_ = re.search(
-        r"\bAND[:\s]*\n+\**([^\*\n,]+)\**.*?located at[^\n]*,\s*([^\n(]+)",
+        r"\bAND[:\s]*\n+\**([^\*\n,]+)\**.*?located at\s+(.+?)\s*\(the\s+[\"“]?Provider",
         text,
         re.IGNORECASE | re.DOTALL,
     )
     return {
         "client_name": between.group(1).strip() if between else None,
-        "client_location": between.group(2).strip() if between else None,
+        "client_location": _clean_location(between.group(2)) if between else None,
         "provider_name": and_.group(1).strip() if and_ else None,
-        "provider_location": and_.group(2).strip() if and_ else None,
+        "provider_location": _clean_location(and_.group(2)) if and_ else None,
     }
 
 
+def _clean_location(raw: str) -> str:
+    return re.sub(r"\s+", " ", raw).strip().rstrip(".,")
+
+
 def _financial(text: str) -> dict:
-    SYMBOLS = {"€": "EUR", "$": "USD", "£": "GBP", "EUR": "EUR", "USD": "USD", "GBP": "GBP"}
+    SYMBOLS = {"€": "EUR", "$": "USD", "£": "GBP"}
 
     def _to_float(raw: str) -> float:
         raw = raw.strip()
@@ -173,7 +226,7 @@ def _financial(text: str) -> dict:
     )
     search_in = fee_block.group(2) if fee_block else text
     pattern = re.compile(
-        r"(EUR|USD|GBP|€|\$|£)\s*([\d,\.]+k?)" r"|" r"([\d,\.]+k?)\s*(EUR|USD|GBP)",
+        r"([A-Z]{3}|€|\$|£)\s*([\d,\.]+k?)" r"|" r"([\d,\.]+k?)\s*([A-Z]{3})",
         re.IGNORECASE,
     )
     best_val, best_cur = None, None

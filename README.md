@@ -1,6 +1,6 @@
 # Legal Contract Pipeline
 
-Agentic document intelligence pipeline for extracting, storing, and querying
+Document intelligence pipeline for extracting, storing, and querying
 legal contract metadata.
 
 **Stack:** Python 3.12 · LangGraph · MinIO · PostgreSQL · Docker Compose
@@ -37,14 +37,14 @@ legal contract metadata.
 | `extract` | Parse metadata from file (parties, financials, dates, clauses) |
 | `validate` | Assert required fields present; retry up to `AGENT_MAX_RETRIES` |
 | `persist` | Upsert parties, insert contract + clauses into PostgreSQL |
-| `notify` | Log result; warn if Force Majeure threshold ≤ 14 days |
+| `notify` | Log result; alert Slack if Force Majeure notice period exceeds 14 days |
 
 ---
 
 ## Project Structure
 
 ```
-legal-pipeline/
+deliveryhero/
 ├── src/
 │   ├── agent/
 │   │   ├── graph.py        # LangGraph state graph definition
@@ -53,10 +53,13 @@ legal-pipeline/
 │   │   └── extract.py      # Format-agnostic metadata parser (.docx, .pdf)
 │   ├── storage/
 │   │   └── minio_client.py # MinIO upload / download / exists
+│   ├── regulatory/
+│   │   └── europa.py       # data.europa.eu Hub Search API client
 │   └── db/
 │       └── repository.py   # PostgreSQL persistence + BI queries
 ├── tests/
 │   ├── test_extractor.py   # Smoke tests — no Docker needed
+│   ├── test_regulatory.py  # API response parsing tests — no network
 │   ├── test_storage.py     # Storage unit tests (moto mock)
 │   └── test_integration.py # End-to-end tests — requires Docker
 ├── scripts/
@@ -78,7 +81,6 @@ legal-pipeline/
 
 - Docker Desktop (or Docker Engine + Compose v2)
 - Python 3.12 (for running tests locally without Docker)
-- Google Service Account (with read access to the google docs)
 
 ### 2. Clone and configure
 
@@ -86,7 +88,7 @@ legal-pipeline/
 git clone git@github.com:ivanemoje/deliveryhero.git
 cd deliveryhero
 
-# Copy the example env — defaults work out of the box
+# Copy the example env — other than GCP, defaults work out of the box 
 cp .env.example .env
 ```
 
@@ -117,15 +119,30 @@ make run
 This processes every `.docx` and `.pdf` in `./sample_contracts/`, uploads each
 file to MinIO, extracts metadata, and persists it to PostgreSQL.
 
-**Process a Google Doc** — pass the document ID:
+### 5. Process a Google Doc**
+
+This processes every `.docx` and `.pdf` passed as arguments. If the drive folder id is shared, all files inside are processed:
+
 ```bash
 make run-gdoc GDOC_IDS="1CFaxG_LurzLL8Gp5NGUzs09Pubu60TPp"
-# or multiple:
-make run-gdoc GDOC_IDS="1CFaxG_LurzLL8Gp5NGUzs09Pubu60TPp 2CyiNWxyz"
 ```
+# or multiple:
+```bash
+make run-gdoc GDOC_IDS="1CFaxG_LurzLL8Gp5NGUzs09Pubu60TPp 1csKnQJWJ9GPg0d-hfEqaiTyyTQxMr-fY"
+```
+
 Requires `GOOGLE_SERVICE_ACCOUNT_JSON` in `.env` pointing to a service account
 with Viewer access to the document. On GCP VMs, Application Default Credentials
 are used automatically if the env var is blank.
+
+### 6. Run regulatory sync
+
+```bash
+make sync-regulatory
+```
+
+This fetches Europa datasets for active contract versions and persists them to
+`regulatory_datasets`.
 
 ---
 
@@ -133,7 +150,7 @@ are used automatically if the env var is blank.
 
 ### Smoke tests (no Docker required)
 
-Tests the extractor and storage modules in isolation.
+Tests the extractor, storage, and regulatory parser modules in isolation.
 
 ```bash
 make test
@@ -149,12 +166,17 @@ tests/test_extractor.py::test_dummy1_obligations   PASSED
 tests/test_extractor.py::test_dummy2_financial     PASSED
 tests/test_extractor.py::test_dummy2_expiration_one_year PASSED
 tests/test_extractor.py::test_unsupported_format_raises  PASSED
+tests/test_extractor.py::test_gdoc_scheme_raises_without_credentials PASSED
+tests/test_regulatory.py::test_parse_nested_europa_response PASSED
+tests/test_regulatory.py::test_regulatory_node_persists_results PASSED
+tests/test_regulatory.py::test_regulatory_node_can_be_disabled PASSED
 tests/test_storage.py::test_upload_and_exists      PASSED
 tests/test_storage.py::test_download_round_trip    PASSED
 tests/test_storage.py::test_object_not_exists      PASSED
 ```
 
-**Note:** `test_extractor.py` tests are skipped automatically if sample contracts are not in `sample_contracts/`. The unsupported-format test always runs.
+> **Note:** `test_extractor.py` tests are skipped automatically if sample
+> contracts are not in `sample_contracts/`. The unsupported-format test always runs.
 
 ### Integration tests (requires Docker)
 
@@ -194,6 +216,123 @@ make down     # stop containers (keeps volumes)
 make clean    # stop containers + delete volumes + remove built image
 ```
 
+---
+
+## Data Model
+
+The PostgreSQL schema is normalized around long-term reporting and lifecycle
+management:
+
+| Table | Purpose |
+|---|---|
+| `parties` | Legal entities with normalized country-level location |
+| `source_documents` | Idempotent document ingestion keys and source metadata |
+| `contract_masters` | Stable relationship between client and service provider |
+| `contract_versions` | Successive contract versions, amendments, renewals, status, dates, values |
+| `contract_party_roles` | Role history per version |
+| `renewal_terms` | Renewal sequence, notice period, and calculated notice deadline |
+| `payment_schedule` | Normalized financial schedule for BI |
+| `contract_clauses` | Clause-level facts, thresholds, confidence, and metadata |
+| `extraction_audit` | Field-level extraction audit trail |
+| `regulatory_datasets` | EU Data Portal results linked to the contract version |
+
+`contracts` is exposed as a compatibility view over `contract_versions` so
+legacy queries can still select `contract_id`, parties, status, expiration date,
+value, currency, clauses, and source key.
+
+The renewal relationship is modeled as a master contract with many successive
+`contract_versions`. Each version can point to its predecessor, and the latest
+active version supersedes the previous one when a new version is inserted.
+
+### BI Queries
+
+The repository exposes the required assessment queries:
+
+- `expiration_risk(days=90)`: active contracts expiring within the window where
+  the non-renewal notice deadline has already passed.
+- `financial_exposure_by_provider_location()`: active contract value grouped by
+  provider country and currency.
+- `force_majeure_immediate_termination(delay_days=14)`: active contracts where a
+  Force Majeure event allows immediate termination at or before the delay
+  threshold.
+
+Equivalent SQL lives in `src/db/repository.py` and is PostgreSQL-compatible.
+
+---
+
+## Regulatory API
+
+`src/regulatory/europa.py` connects to the official data.europa.eu Hub Search
+API and returns a clean list of `Title`, `Description`, and `ID` values.
+Regulatory enrichment runs as a separate job via `make sync-regulatory`; it uses
+active contract versions' Effective Dates, retrieves the top datasets, and stores
+them in `regulatory_datasets` against each `contract_version_id`.
+
+The parser is defensive because the API response can contain nested result 
+containers and localized text dictionaries.
+
+---
+
+## OCR Strategy
+
+Native digital files are parsed with structured extractors first: `python-docx`
+for DOCX content and `pdfplumber` for embedded PDF text. If a PDF page has no
+extractable text, the extractor falls back to OCR with `pytesseract` at 300 DPI.
+
+OCR output is normalized before field extraction by repairing common line-break
+hyphenation, collapsing repeated spaces, and normalizing currency symbols. In a
+production version, the audit table would also store confidence scores per field
+and route low-confidence extractions to human review.
+
+---
+
+## LLM Strategy
+
+Contracts are treated as private legal documents. A Vertex AI prompt should:
+
+- Instruct the model to classify only the clauses requested by an explicit JSON
+  schema.
+- Forbid inventing values and require `null` when evidence is absent.
+- Require a short evidence span and confidence score for every extracted field.
+- Use deterministic generation settings and validate the response against the
+  database schema before persistence.
+- Run inside a private GCP project with no prompt logging beyond approved audit
+  metadata.
+
+Example response contract:
+
+```json
+{
+  "clauses": [
+    {
+      "type": "FORCE_MAJEURE",
+      "notice_period_days": 14,
+      "performance_delay_threshold_days": 14,
+      "immediate_termination_allowed": true,
+      "evidence": "If a Force Majeure event prevents...",
+      "confidence": 0.92
+    }
+  ]
+}
+```
+
+---
+
+## Proactive Alerting
+
+For serverless alerting, the pipeline writes clause facts into PostgreSQL and
+then emits a Slack alert when the Force Majeure notice period exceeds the
+14-day termination trigger. Locally this is handled by `node_notify`; in GCP the
+same event can be sent through Pub/Sub to an n8n workflow:
+
+1. Cloud Run pipeline completes extraction and persistence.
+2. Pub/Sub publishes `{contract_id, force_majeure_notice_days}`.
+3. n8n checks whether `force_majeure_notice_days > 14`.
+4. n8n posts a Procurement Slack message with the contract ID, threshold, and
+   link to the stored document.
+
+Set `SLACK_WEBHOOK_URL` to enable local webhook delivery from the pipeline.
+
 ### Inspect the database directly
 
 ```bash
@@ -219,38 +358,19 @@ Open http://localhost:9001 → login `minioadmin`/`minioadmin` → browse the
 | `POSTGRES_PASSWORD` | `legal` | DB password |
 | `POSTGRES_DB` | `contracts` | Database name |
 | `POSTGRES_HOST` | `postgres` | Host (use `localhost` for local tests) |
+| `PGADMIN_EMAIL` | `admin@admin.com` |
+| `PGADMIN_PASSWORD` | `admin` |
+| `PGADMIN_HOST_PORT` | `5050` |
 | `MINIO_ENDPOINT` | `minio:9000` | MinIO API endpoint |
 | `MINIO_ACCESS_KEY` | `minioadmin` | MinIO access key |
 | `MINIO_SECRET_KEY` | `minioadmin` | MinIO secret key |
 | `MINIO_BUCKET` | `legal-documents` | Target bucket name |
+| `MINIO_USE_SSL` | `false` | Use HTTPS for MinIO/S3 endpoint |
+| `EUROPA_API_BASE` | `https://data.europa.eu/api/hub/search/search` | EU Data Portal Hub Search API |
+| `EUROPA_QUERY` | `Digital Services OR Data Protection` | Regulatory search query |
+| `EUROPA_LIMIT` | `5` | Number of regulatory datasets to persist |
 | `AGENT_MAX_RETRIES` | `2` | Max extract retries on validation failure |
+| `SLACK_WEBHOOK_URL` | empty | Optional Slack incoming webhook for Procurement alerts |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | empty | Optional service account path for Google Docs extraction |
 
 ---
-
-## Extending the pipeline
-
-**Add a new file format** — add one entry to `_READERS` in `src/extractor/extract.py`:
-```python
-_READERS[".rtf"] = _text_from_rtf
-```
-
-
-**Add a new graph node** (e.g. Slack alert) — add a function in `src/agent/graph.py`,
-register it with `g.add_node`, and wire it into the edges. The rest of the graph
-is unaffected.
-
-**Add a new clause type** — extend `_obligations()` in `src/extractor/extract.py`
-and add a corresponding INSERT in `src/db/repository.py`.
-
-## TODOs
-- drive
-- add pgadmin, 
-- initialize contracts folder in minio
-- check contracts being executed
-- update the README
-- give container names
-- perfect document extraction
-- remove bloat (agent)
-
-### comments
-- focus on doc extraction // make perfect

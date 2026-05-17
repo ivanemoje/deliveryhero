@@ -1,7 +1,42 @@
 """
-Storage unit tests.
+Storage unit tests using moto to mock the S3/MinIO API.
+No Docker needed.
 Run with: pytest tests/test_storage.py -v
 """
+
+import os
+from unittest.mock import patch
+
+import pytest
+
+# Set env vars before importing storage module
+os.environ.setdefault("MINIO_ENDPOINT", "localhost:9000")
+os.environ.setdefault("MINIO_ACCESS_KEY", "minioadmin")
+os.environ.setdefault("MINIO_SECRET_KEY", "minioadmin")
+os.environ.setdefault("MINIO_BUCKET", "legal-documents")
+os.environ.setdefault("MINIO_USE_SSL", "false")
+
+
+@pytest.fixture()
+def mock_s3(tmp_path):
+    """Spin up an in-process mock S3 using moto."""
+    import boto3
+    from moto import mock_aws
+
+    with mock_aws():
+        # Create the bucket the storage module expects
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=None,  # moto intercepts all boto3 calls
+            region_name="us-east-1",
+            aws_access_key_id="minioadmin",
+            aws_secret_access_key="minioadmin",
+        )
+        s3.create_bucket(Bucket="legal-documents")
+
+        # Patch _client() in storage to return this mock client
+        with patch("src.storage.minio_client._client", return_value=s3):
+            yield s3, tmp_path
 
 
 def test_upload_and_exists(mock_s3):
