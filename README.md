@@ -288,18 +288,21 @@ and route low-confidence extractions to human review.
 
 ## LLM Strategy
 
-Contracts are treated as private legal documents. A Vertex AI prompt should:
+Contracts are treated as private legal documents. All LLM calls run inside a private GCP project deployed in eu (or any relevant region) behind a VPC Service Control perimeter — contract text never leaves the EU/region data boundary. Cloud Logging is disabled for this endpoint; only approved audit metadata is retained.
 
-- Instruct the model to classify only the clauses requested by an explicit JSON
-  schema.
-- Forbid inventing values and require `null` when evidence is absent.
-- Require a short evidence span and confidence score for every extracted field.
-- Use deterministic generation settings and validate the response against the
-  database schema before persistence.
+The Vertex AI prompt instructs the gemini model gemini-1.5-pro to:
+
+
+- Classify only the clause types defined in an explicit JSON schema — no freeform output.
+- Return `null` for any field where evidence is absent, never invent values.
+- Include a short verbatim evidence span and a confidence score for every extracted field.
+Use deterministic generation settings:
+    - Use temperature=0 and response_mime_type="application/json" for schema-locked output.
+    - Validate the response against the database schema before persistence.
 - Run inside a private GCP project with no prompt logging beyond approved audit
   metadata.
 
-Example response contract:
+Responses are validated against the database schema before persistence.Example response contract:
 
 ```json
 {
@@ -309,12 +312,29 @@ Example response contract:
       "notice_period_days": 14,
       "performance_delay_threshold_days": 14,
       "immediate_termination_allowed": true,
-      "evidence": "If a Force Majeure event prevents...",
+      "evidence": "If a Force Majeure event prevents the Provider from performing for a period exceeding fourteen (14) consecutive days...",
       "confidence": 0.92
+    },
+    {
+      "type": "NON_RENEWAL_NOTICE",
+      "notice_period_months": 3,
+      "notice_deadline_date": "2026-04-24",
+      "bgb_625_excluded": true,
+      "evidence": "either party provides written notice of non-renewal at least three (3) months prior to the Expiration Date",
+      "confidence": 0.97
+    },
+    {
+      "type": "GOVERNING_LAW",
+      "jurisdiction": "Federal Republic of Germany",
+      "venue": "Berlin",
+      "evidence": "governed by and construed in accordance with the laws of the Federal Republic of Germany",
+      "confidence": 0.99
     }
   ]
 }
 ```
+
+LLM calls can be cached to reduce further costs in certain cases.
 
 ---
 
@@ -322,7 +342,7 @@ Example response contract:
 
 For serverless alerting, the pipeline writes clause facts into PostgreSQL and
 then emits a Slack alert when the Force Majeure notice period exceeds the
-14-day termination trigger. Locally this is handled by `node_notify`; in GCP the
+14-day termination trigger. Another alert can be fired a day before the threshold is reached, giving the team even more time to act. Locally this is handled by `node_notify`; in GCP the
 same event can be sent through Pub/Sub to an n8n workflow:
 
 1. Cloud Run pipeline completes extraction and persistence.
